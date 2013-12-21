@@ -13,9 +13,13 @@
                  [compojure "1.1.6"]
                  [liberator "0.10.0"]
 
+                 [environ "0.4.0"]
+
                  [io.isaachodes/reticulum "0.0.1-SNAPSHOT"]
 
                  [hiccup "1.0.4"]
                  [cheshire "5.2.0"]
-
-                 [com.datomic/datomic-pro "0.9.4324"]])
+                 
+                 [org.clojure/java.jdbc "0.2.3"]
+                 [postgresql "9.1-901.jdbc4"]
+                 [korma "0.3.0-RC6"]])
