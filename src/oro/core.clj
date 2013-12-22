@@ -5,6 +5,7 @@
              [org.httpkit.server :refer :all] 
 
              [oro.pages        :refer :all]
+             [oro.models       :refer :all]
              [oro.utils        :refer :all]
              [oro.middleware   :refer :all]
              [oro.controllers  :refer :all]
@@ -16,6 +17,8 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;; Routes
 (defroutes routes
+  (ANY "/ping" [] (fn [req] req)) ;; TK DEBUG
+
   (GET "/" [] landing-page)
   (context "/api/v1.0" []
     (GET "/" [] "You are connected to the API.")
@@ -95,9 +98,12 @@
 
 (def app
   (r<- #'routes
+       wrap-basic-auth
+       (wrap-user user-by-secret)
        wrap-string-body
        wrap-json-request
-
+       wrap-newline
+       wrap-utf-8
        wrap-json-response))
 
 

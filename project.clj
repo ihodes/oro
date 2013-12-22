@@ -4,6 +4,8 @@
                  
                  [org.clojure/core.async "0.1.242.0-44b1e3-alpha"]
                  [org.clojure/core.logic "0.8.5"]
+                 [clojurewerkz/scrypt "1.0.0"]
+                 [org.clojure/data.codec "0.1.0"]
                  
                  [prismatic/schema "0.1.9"]
                  [prismatic/plumbing "0.1.1"]

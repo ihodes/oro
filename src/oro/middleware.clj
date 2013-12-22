@@ -1,7 +1,38 @@
 (ns oro.middleware
   (require [plumbing.core :refer :all]
-           [cheshire.core :as smile]))
+           [cheshire.core :as smile]
+           [clojure.data.codec.base64 :as b64]))
 
+
+(defn str->base64-str [s]
+  (String. (b64/encode (.getBytes s)) "UTF-8"))
+
+(defn base64-str->str [s]
+  (String. (b64/decode (.getBytes s)) "UTF-8"))
+
+(defn auth
+  [resp]
+  (header resp "WWW-Authenticate" "Basic realm=\"oro\""))
+
+(defn wrap-basic-auth
+  [handler]
+  (fn [request]
+    (let [headers     (:headers request)
+          auth-header (get headers "authorization")
+          auth-text   (when auth-header (base64-str->str (nth (split auth-header #" ") 1)))
+          auth-map    (when auth-text (into {} (map vector [:user :pass]
+                                                    (split auth-text #":"))))]
+      (handler (assoc request :auth auth-map)))))
+
+(defn wrap-user
+  [handler lookup]
+  (fn [request]
+    (let [api-token  (if-let [auth (:auth request)] (:user auth))
+          api-secret (if-let [auth (:auth request)] (:pass auth))
+          user (lookup api-token)]
+      (if (and user (= (:api-secret user) api-secret))
+        (handler (assoc request :user (rename-keys user {:_id :id})))
+        (handler (assoc request :user nil))))))
 
 (defn wrap-json-response
   [handler]  
@@ -25,3 +56,18 @@
                json-map (keywordize-map (smile/parse-string body))]
            (handler (merge-with merge request {:json json-map})))
          (catch Exception e (handler request)))))
+
+(defn wrap-utf-8
+  [handler]
+  (fn [request]
+    (let [response (handler request)]
+      (charset response "utf-8"))))
+
+(defn wrap-append-newline
+  [handler]
+  (fn [request]
+    (let [response (handler request)
+          body (:body response)]
+      (if (instance? String body)
+        (update-in response [:body] #(str % \newline))
+        response))))
