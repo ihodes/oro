@@ -3,7 +3,6 @@
             [korma.core :refer :all]))
 
 
-
 (def +db+ (postgres {:db "orodb"
                      :username "oro"
                      :password "oro"}))
@@ -25,4 +24,23 @@
 (defentity customers
   (pk :uuid)
   (belongs-to users {:fk :user_uuid}))
-p
+
+(defentity cards
+  (pk :uuid)
+  (belongs-to users {:fk :user_uuid})
+  (belongs-to customers {:fk :customer_uuid}))
+
+(defentity plans
+  (pk :uuid)
+  (belongs-to users {:fk :user_uuid}))
+
+(defentity subscriptions
+  (pk :uuid)
+  (belongs-to users     {:fk :user_uuid})
+  (belongs-to plans     {:fk :plan_uuid})
+  (belongs-to customers {:fk :customer_uuid}))
+
+(defentity tokens
+  (pk :uuid)
+  (belongs-to users {:fk :user_uuid})
+  (belongs-to cards {:fk :card_uuid}))

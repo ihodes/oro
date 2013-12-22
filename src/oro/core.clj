@@ -13,22 +13,6 @@
 
 (def +api-version+ "v1.0")
 
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;; Predeclarations (...the todo list)
-;; Need to be implemented
-(declare get-transaction create-transaction update-transaction
-         refund-transaction capture-transaction)
-(declare get-customer create-customer update-customer delete-customer)
-
-(declare get-cards get-card create-card update-card delete-card)
-(declare get-plans get-plan create-plan update-plan delete-plan)
-(declare get-subscriptions get-subscription create-subscription 
-         update-subscription delete-subscription)
-(declare get-tokens get-token create-token)
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;; Routes
 (defroutes routes
@@ -39,56 +23,57 @@
     (context "/account" []
       (GET "/"          []     get-account-information))
     
-    (context "/users"      []
-      (GET "/"             []           get-users)
-      (GET "/:user-id"     [user-id]    get-user)
-      (POST "/"            []           create-user)
-      (POST "/:user-id"    [user-id]    update-user)
-      (DELETE "/:user-id"  [user-id]    delete-user))
+    (context "/users"        []
+      (GET "/"               []           get-users)
+      (GET "/:user-uuid"     [user-uuid]    get-user)
+      (POST "/"              []           create-user)
+      (POST "/:user-uuid"    [user-uuid]    update-user)
+      (DELETE "/:user-uuid"  [user-uuid]    delete-user))
 
     ;; Calling this transaction, as it allows us to be more flexible with what sorts
     ;; of payment methods we can handle. E.g. cash equiv cards sold in supermarkets,
     ;; or mobile payments... etc. 
-    (context "/transactions"   []
-      (GET "/"                 []                       get-transactions)
-      (GET "/:transaction-id"  [transaction-id]         get-transaction)
-      (POST "/"                 []                       create-transaction)
-      (POST "/:transaction-id" [transaction-id]         update-transaction)
-      (POST "/:transaction-id/refund"  [transaction-id] refund-transaction)
-      (POST "/:transaction-id/capture" [transaction-id] capture-transaction))
+    (context "/transactions"     []
+      (GET "/"                   []                       get-transactions)
+      (GET "/:transaction-uuid"  [transaction-uuid]         get-transaction)
+      (POST "/"                  []                       create-transaction)
+      (POST "/:transaction-uuid" [transaction-uuid]         update-transaction)
+      (POST "/:transaction-uuid/refund"  [transaction-uuid] refund-transaction)
+      (POST "/:transaction-uuid/capture" [transaction-uuid] capture-transaction))
 
-    (context "/customers"      []
-      (GET "/"                 []               get-customers)
-      (GET "/:customer-id"     [customer-id]    get-customer)
-      (POST "/"                []               create-customer)
-      (POST "/:customer-id"    [customer-id]    update-customer)
-      (DELETE "/:customer-id"  [customer-id]    delete-customer))
+    (context "/customers"        []
+      (GET "/"                   []               get-customers)
+      (GET "/:customer-uuid"     [customer-uuid]    get-customer)
+      (POST "/"                  []               create-customer)
+      (POST "/:customer-uuid"    [customer-uuid]    update-customer)
+      (DELETE "/:customer-uuid"  [customer-uuid]    delete-customer))
 
     (context "/cards"      []
       (GET "/"             []           get-cards)
-      (GET "/:card-id"     [card-id]    get-card)
+      (GET "/:card-uuid"   [card-uuid]    get-card)
       (POST "/"            []           create-card)
-      (POST "/:card-id"    [card-id]    update-card)
-      (DELETE "/:card-id"  [card-id]    delete-card))
+      (POST "/:card-uuid"  [card-uuid]    update-card)
+      (DELETE "/:card-uuid"[card-uuid]    delete-card))
 
-    (context "/plans"      []
-      (GET "/"             []           get-plans)
-      (GET "/:plan-id"     [plan-id]    get-plan)
-      (POST "/"            []           create-plan)
-      (POST "/:plan-id"    [plan-id]    update-plan)
-      (DELETE "/:plan-id"  [plan-id]    delete-plan))
+    (context "/plans"        []
+      (GET "/"               []           get-plans)
+      (GET "/:plan-uuid"     [plan-uuid]    get-plan)
+      (POST "/"              []           create-plan)
+      (POST "/:plan-uuid"    [plan-uuid]    update-plan)
+      (DELETE "/:plan-uuid"  [plan-uuid]    delete-plan))
 
-    (context "/subscriptions"      []
-      (GET "/"                     []                 get-subscriptions)
-      (GET "/:subscription-id"     [subscription-id]  get-subscription)
-      (POST "/"                    []                 create-subscription)
-      (POST "/:subscription-id"    [subscription-id]  update-subscription)
-      (DELETE "/:subscription-id"  [subscription-id]  delete-subscription))
+    (context "/subscriptions"        []
+      (GET "/"                       []                 get-subscriptions)
+      (GET "/:subscription-uuid"     [subscription-uuid]  get-subscription)
+      (POST "/"                      []                 create-subscription)
+      (POST "/:subscription-uuid"    [subscription-uuid]  update-subscription)
+      (DELETE "/:subscription-uuid"  [subscription-uuid]  delete-subscription))
 
     (context "/tokens"     []
-      (GET  "/"            []          get-tokens)
-      (GET  "/:token-id"   [token-id]  get-token)
-      (POST "/"            []          create-token)))
+      (GET  "/"            []            get-tokens)
+      (GET  "/:token-uuid" [token-uuid]  get-token)
+      (POST "/"            []            create-token)))
+
   (ANY "/*" [] (respond-json-404)))
 
 ;; Stripe also has: 
