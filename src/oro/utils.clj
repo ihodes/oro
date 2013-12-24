@@ -1,4 +1,5 @@
-(ns oro.utils)
+(ns oro.utils
+  (:require [clojurewerkz.scrypt.core :as scrypt]))
 
 (defmacro r<-
   "Useful for listing ring middleware/wrappers in logical order. 
@@ -14,3 +15,11 @@
   ([x] x) 
   ([x & forms]
      `(->> ~x ~@(reverse forms))))
+
+(defn encrypt
+  [pw]
+  (scrypt/encrypt pw (Math/pow 2 16) 8 1))
+
+(defn verify
+  [plain-pw encrypted-pw]
+  (scrypt/verify plain-pw encrypted-pw))

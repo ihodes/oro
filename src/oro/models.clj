@@ -1,25 +1,17 @@
 (ns oro.models
-  (:require [korma.db :refer :all]
+  (:require [plumbing.core :refer :all]
+            
+            [korma.db :refer :all]
             [korma.core :refer :all]
-            [clojurewerkz.scrypt.core :as scrypt]))
+            [environ.core :refer [env]]
+            [oro.utils :refer [encrypt verify]]))
 
 
-;; TK FACTOR OUT
-(defn encrypt
-  [pw]
-  (scrypt/encrypt pw (Math/pow 2 16) 8 1))
+(def +db+ (postgres {:db       (env :db-name)
+                     :username (env :db-username)
+                     :password (env :db-password)}))
+(defdb db +db+)
 
-(defn verify
-  [plain-pw encrypted-pw]
-  (scrypt/verify plain-pw encrypted-pw))
-
-
-
-(def +db+ (postgres {:db "orodb"
-                     :username "oro"
-                     :password "oro"}))
-
-(defdb orodb +db+)
 
 
 (declare users transactions customers)
@@ -60,7 +52,13 @@
   (belongs-to cards {:fk :card_uuid}))
 
 
-;; TK TODO should be factored out to elsewhere...
+(defn belongs?
+  "True if the object belongs to the user; verified by checking that the
+   the user_uuid is equal to the uuid of the user."
+  [user object]
+  (= (:uuid user) (:user_uuid object)))
+
 (defn user-by-secret
-  [api-secret]
-  (select users (where {:api_secret api-secret})))
+  [_ pass]
+  (when pass
+    (first (select users (where {:api_secret pass})))))

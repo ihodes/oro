@@ -1,7 +1,11 @@
 (ns oro.middleware
   (require [plumbing.core :refer :all]
+
            [cheshire.core :as smile]
-           [clojure.data.codec.base64 :as b64]))
+           [ring.util.response :refer [charset header]]
+           [clojure.data.codec.base64 :as b64]
+           [clojure.string :refer [split]]
+           [clojure.set :refer [rename-keys]]))
 
 
 (defn str->base64-str [s]
@@ -27,12 +31,9 @@
 (defn wrap-user
   [handler lookup]
   (fn [request]
-    (let [api-token  (if-let [auth (:auth request)] (:user auth))
-          api-secret (if-let [auth (:auth request)] (:pass auth))
-          user (lookup api-token)]
-      (if (and user (= (:api-secret user) api-secret))
-        (handler (assoc request :user (rename-keys user {:_id :id})))
-        (handler (assoc request :user nil))))))
+    (let [user (get-in request [:auth :user])
+          pass (get-in request [:auth :pass])]
+      (handler (assoc request :user (lookup user pass))))))
 
 (defn wrap-json-response
   [handler]  

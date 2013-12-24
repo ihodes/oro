@@ -1,7 +1,10 @@
 (ns oro.controllers
   (:require [plumbing.core :refer :all]
 
+            [oro.responses :refer :all]
             [oro.models :refer :all]
+            [oro.valid :as valid]
+
             [korma.core :refer :all]
             [cheshire.core :as smile]
             [ring.util.response :refer (status response content-type header)])
@@ -12,50 +15,77 @@
 (defn- random-string [] (.toString (java.math.BigInteger. 130 (SecureRandom.))))
 
 
+;; TK TODO
+; 1. consider having a different API for the admin user...
 
-(defn get-account-information
-  [req]
-  (response {:* "...pending..."}))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;; Account
+(defnk get-account-information
+  [[:user {uuid nil}] :as req]
+  (if uuid
+    (response (first (select users
+                       (where {:uuid uuid})
+                       (limit 1))))
+    (respond-json-401)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;; Users
-(defn get-users
-  [req]
-  (response {:users (select users)}))
+(defnk get-users
+  [[:user {root nil}] :as req]
+  (if root
+    (response {:users (select users)})
+    (respond-json-401)))
 
 (defnk get-user
-  [[:route-params user-uuid] :as req]
-  (response (select users
-              (where {:uuid (uuid user-uuid)}))))
+  [[:user {root nil}] [:route-params user-uuid] :as req]
+  (if root
+    (response (first (select users
+                       (where {:uuid (uuid user-uuid)})
+                       (limit 1))))
+    (respond-json-401)))
 
 (defnk create-user
-  [[:json email password] :as req]
-  (response (insert users
-              (values {:email email :password password
-                       :api_secret (random-string) :api_public (random-string)}))))
+  [[:json {email ""} {password ""}] :as req]
+  (if (and (valid/email? email)
+           (valid/password? password))
+      (response (insert users
+                  (values {:email email :password password
+                           :api_secret (random-string)
+                           :api_public (random-string)})))))
 
 (defnk update-user
-  [[:json password :as updated] [:route-params user-uuid] :as req]
-  (response (update users (set-fields updated)
-              (where {:uuid (uuid user-uuid)}))))
+  [[:json {password nil}] [:route-params user-uuid] user :as req]
+  (if password
+    (if (or (:root user) (= (:uuid user) user-uuid))
+      (response (update users (set-fields {:password password})
+                        (where {:uuid (uuid user-uuid)})))
+      (respond-json-401))
+    (respond-json-400 "This request must include (only) a new password.")))
 
 (defnk delete-user
-  [[:route-params user-uuid] :as req]
-  (response (delete users
-              (where {:uuid (uuid user-uuid)}))))
-
+  [[:route-params user-uuid] [:user {root nil}] :as req]
+  (if root
+    (response (delete users (where {:uuid (uuid user-uuid)})))
+    (respond-json-404))) ;; technically 401, but why expose that?
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;; Transactions
-(defn get-transactions [req]
-  (response {:transactions (select transactions)}))
+(defnk get-transactions
+  [[:user {uuid nil}] :as req]
+  (if uuid
+    (response {:transactions (select transactions
+                               (where {:user_uuid uuid}))})
+    (respond-json-401)))
 
 (defnk get-transaction
-  [[:route-params transaction-uuid] :as req]
-  (response (select transactions
-              (where {:uuid (uuid transaction-uuid)}))))
+  [[:user {uuid nil}] [:route-params transaction-uuid] :as req]
+  (let [ts (select transactions (where {:uuid (uuid transaction-uuid)}))]
+    (if (and uuid (= uuid (:user_uuid ts)))
+      (response ts)
+      (respond-json-401))))
 
 (defnk create-transaction
   [[:json user_uuid amount source destination :as fields] :as req]

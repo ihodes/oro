@@ -2,6 +2,7 @@
   (:require  [plumbing.core :refer :all]
 
              [compojure.core     :refer [defroutes GET POST PUT DELETE ANY context]]
+             [ring.util.response :as ring]
              [org.httpkit.server :refer :all] 
 
              [oro.pages        :refer :all]
@@ -17,19 +18,18 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;; Routes
 (defroutes routes
-  (ANY "/ping" [] (fn [req] req)) ;; TK DEBUG
-
+  (ANY "/ping" [] (fn [req] (ring/response req))) ;; TK DEBUG
   (GET "/" [] landing-page)
   (context "/api/v1.0" []
     (GET "/" [] "You are connected to the API.")
 
     (context "/account" []
-      (GET "/"          []     get-account-information))
+      (GET "/"          []   get-account-information))
     
     (context "/users"        []
-      (GET "/"               []           get-users)
+      (GET "/"               []             get-users)
       (GET "/:user-uuid"     [user-uuid]    get-user)
-      (POST "/"              []           create-user)
+      (POST "/"              []             create-user)
       (POST "/:user-uuid"    [user-uuid]    update-user)
       (DELETE "/:user-uuid"  [user-uuid]    delete-user))
 
@@ -37,38 +37,38 @@
     ;; of payment methods we can handle. E.g. cash equiv cards sold in supermarkets,
     ;; or mobile payments... etc. 
     (context "/transactions"     []
-      (GET "/"                   []                       get-transactions)
+      (GET "/"                   []                         get-transactions)
       (GET "/:transaction-uuid"  [transaction-uuid]         get-transaction)
-      (POST "/"                  []                       create-transaction)
+      (POST "/"                  []                         create-transaction)
       (POST "/:transaction-uuid" [transaction-uuid]         update-transaction)
       (POST "/:transaction-uuid/refund"  [transaction-uuid] refund-transaction)
       (POST "/:transaction-uuid/capture" [transaction-uuid] capture-transaction))
 
     (context "/customers"        []
-      (GET "/"                   []               get-customers)
+      (GET "/"                   []                 get-customers)
       (GET "/:customer-uuid"     [customer-uuid]    get-customer)
-      (POST "/"                  []               create-customer)
+      (POST "/"                  []                 create-customer)
       (POST "/:customer-uuid"    [customer-uuid]    update-customer)
       (DELETE "/:customer-uuid"  [customer-uuid]    delete-customer))
 
     (context "/cards"      []
-      (GET "/"             []           get-cards)
+      (GET "/"             []             get-cards)
       (GET "/:card-uuid"   [card-uuid]    get-card)
-      (POST "/"            []           create-card)
+      (POST "/"            []             create-card)
       (POST "/:card-uuid"  [card-uuid]    update-card)
       (DELETE "/:card-uuid"[card-uuid]    delete-card))
 
     (context "/plans"        []
-      (GET "/"               []           get-plans)
+      (GET "/"               []             get-plans)
       (GET "/:plan-uuid"     [plan-uuid]    get-plan)
-      (POST "/"              []           create-plan)
+      (POST "/"              []             create-plan)
       (POST "/:plan-uuid"    [plan-uuid]    update-plan)
       (DELETE "/:plan-uuid"  [plan-uuid]    delete-plan))
 
     (context "/subscriptions"        []
-      (GET "/"                       []                 get-subscriptions)
+      (GET "/"                       []                   get-subscriptions)
       (GET "/:subscription-uuid"     [subscription-uuid]  get-subscription)
-      (POST "/"                      []                 create-subscription)
+      (POST "/"                      []                   create-subscription)
       (POST "/:subscription-uuid"    [subscription-uuid]  update-subscription)
       (DELETE "/:subscription-uuid"  [subscription-uuid]  delete-subscription))
 
@@ -101,10 +101,10 @@
        wrap-basic-auth
        (wrap-user user-by-secret)
        wrap-string-body
+       wrap-json-response
        wrap-json-request
-       wrap-newline
-       wrap-utf-8
-       wrap-json-response))
+       wrap-append-newline
+       wrap-utf-8))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
