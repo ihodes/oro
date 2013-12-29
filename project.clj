@@ -4,6 +4,7 @@
                  
                  [org.clojure/core.async "0.1.242.0-44b1e3-alpha"]
                  [org.clojure/core.logic "0.8.5"]
+                 [org.clojure/core.match "0.2.0"]
                  [clojurewerkz/scrypt "1.0.0"]
                  [org.clojure/data.codec "0.1.0"]
                  
